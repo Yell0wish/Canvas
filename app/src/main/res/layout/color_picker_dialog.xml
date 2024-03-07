@@ -1,0 +1,20 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <View
+        android:id="@+id/color_picker_view"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@android:color/black" />
+
+    <SeekBar
+        android:id="@+id/stroke_width_seekbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="50" />
+
+</LinearLayout>
