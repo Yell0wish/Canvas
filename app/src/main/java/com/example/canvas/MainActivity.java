@@ -20,6 +20,8 @@ import android.widget.PopupWindow;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
+import com.squareup.picasso.Picasso;
+
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -127,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void fetchStoryWithOptions(String pic_ori) {
         OkHttpClient client = new OkHttpClient();
-        String url = "http://192.168.1.13:8080/getModifiedPicture"; // 请替换为实际的URL
+        String url = "http://handsome-gxc.gnway.cc:80/getModifiedPicture/"; // 请替换为实际的URL
         // 创建POST请求体
         RequestBody requestBody = new FormBody.Builder()
                 .add("pic_ori", pic_ori)
@@ -137,12 +139,12 @@ public class MainActivity extends AppCompatActivity {
                 .url(url)
                 .post(requestBody)
                 .build();
-
+        Log.d("EERRR", "yes");
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 // 处理请求失败的情况
-                Log.d("EEEEERRR", "coming");
+                Log.d("EERRR", "coming");
                 e.printStackTrace();
             }
 
@@ -153,47 +155,56 @@ public class MainActivity extends AppCompatActivity {
                     // 在这里解析和使用响应体
                     try {
                         JSONObject jsonObject = new JSONObject(responseBody);
-                        String pic_now = jsonObject.getString("pic_now");
-                        String passed = jsonObject.getString("passed");
-                        if (passed.equals("1")) {
-                            passed = "闯关成功";
-                        } else {
-                            passed = "闯关失败TAT";
-                        }
-                        String finalPassed = passed;
+                        Log.d("returnMSG", jsonObject.getString("msg"));
+                        JSONObject data = jsonObject.getJSONObject("data"); // 获取嵌套的"data"对象
+                        String pic_now = data.getString("url");
+//                        String passed = data.getString("passed");
+//                        if (passed.equals("1")) {
+//                            passed = "闯关成功";
+//                        } else {
+//                            passed = "闯关失败TAT";
+//                        }
+//                        String finalPassed = passed;
                         runOnUiThread(() -> {
+                            Log.d("ERRRR", pic_now);
                             showImageInNewWindow(pic_now); // 在这里调用方法显示图片
-                            showToastMessage(finalPassed);
+//                            showToastMessage(finalPassed);
                         });
                     } catch (JSONException e) {
+                        Log.d("EERRR", "errrr");
                         e.printStackTrace();
                     }
+                } else {
+                    // 打印出详细的错误信息
+                    Log.d("EERRR", "HTTP Status Code: " + response.code());
+                    Log.d("EERRR", "Response message: " + response.message());
+
+                    if (response.body() != null) {
+                        String errorBody = response.body().string();
+                        Log.d("EERRR", "Error response body: " + errorBody);
+                    }
+
+//                    Log.d("EERRR", "aaas");
                 }
             }
         });
     }
-    private void showImageInNewWindow(String base64String) {
-        byte[] decodedString = Base64.decode(base64String, Base64.DEFAULT);
-        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-
+    private void showImageInNewWindow(String imageUrl) {
         Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_image);
 
         ImageView imageView = dialog.findViewById(R.id.dialog_image_view);
-        imageView.setImageBitmap(decodedByte);
 
-        // 获取图片的宽度和高度
-        int imageWidth = decodedByte.getWidth();
-        int imageHeight = decodedByte.getHeight();
+        // 使用Picasso加载图片到ImageView
+        Picasso.get().load(imageUrl).into(imageView);
 
-        // 设置点击事件
-        imageView.setOnClickListener(v -> dialog.dismiss()); // 点击图片关闭Dialog
+        // 点击图片关闭Dialog
+        imageView.setOnClickListener(v -> dialog.dismiss());
 
-        // 确保Dialog窗口的大小与图片大小相匹配
-        dialog.getWindow().setLayout(imageWidth, imageHeight);
-
+        // 显示对话框
         dialog.show();
     }
+
 
 
 
