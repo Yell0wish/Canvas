@@ -8,6 +8,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
@@ -32,6 +33,7 @@ import java.io.IOException;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -129,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void fetchStoryWithOptions(String pic_ori) {
         OkHttpClient client = new OkHttpClient();
-        String url = "http://handsome-gxc.gnway.cc:80/getModifiedPicture/"; // 请替换为实际的URL
+        String url = "http://handsomegxc.natapp1.cc/getModifiedPicture/"; // 请替换为实际的URL
         // 创建POST请求体
         RequestBody requestBody = new FormBody.Builder()
                 .add("pic_ori", pic_ori)
@@ -158,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.d("returnMSG", jsonObject.getString("msg"));
                         JSONObject data = jsonObject.getJSONObject("data"); // 获取嵌套的"data"对象
                         String pic_now = data.getString("url");
+                        fetchStoryWithOptions1(pic_now);
 //                        String passed = data.getString("passed");
 //                        if (passed.equals("1")) {
 //                            passed = "闯关成功";
@@ -171,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
 //                            showToastMessage(finalPassed);
                         });
                     } catch (JSONException e) {
-                        Log.d("EERRR", "errrr");
+                        Log.e("JSONError", "JSON parsing error", e);
                         e.printStackTrace();
                     }
                 } else {
@@ -210,6 +213,89 @@ public class MainActivity extends AppCompatActivity {
 
     private void showToastMessage(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    private void fetchStoryWithOptions1(String pic_url) {
+        OkHttpClient client = new OkHttpClient();
+        String url = "http://handsomegxc.natapp1.cc/picture/recognition"; // 请替换为实际的URL
+
+        // 创建 JSON 对象并放入 image_url
+        JSONObject json = new JSONObject();
+        try {
+            json.put("image_url", pic_url);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        // 将 JSON 对象转换为字符串
+        String jsonString = json.toString();
+
+        // 创建 JSON 的 MediaType
+        MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+
+        // 创建 POST 请求体
+        RequestBody requestBody = RequestBody.create(jsonString, JSON);
+
+        Request request = new Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .build();
+        Log.d("EERRR", "yes");
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                // 处理请求失败的情况
+                Log.d("EERRR", "coming");
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    String responseBody = response.body().string();
+                    // 在这里解析和使用响应体
+                    try {
+                        JSONObject jsonObject = new JSONObject(responseBody);
+                        String result = jsonObject.getString("msg");
+                        Log.d("returnMSG", jsonObject.getString("msg"));
+                        // 根据需要处理响应
+                        runOnUiThread(() -> {
+                            if (result.equals("ok")) {
+                                // todo 跳转到视频播放界面 字符串 += 1
+
+                            } else {
+                                // 播放音乐重画
+                                MediaPlayer mediaPlayer = MediaPlayer.create(MainActivity.this, R.raw.fail); // 假设您的音乐文件名为 music.mp3
+                                mediaPlayer.start(); // 开始播放
+                                showToastMessage("闯关失败TAT");
+                                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                                    @Override
+                                    public void onCompletion(MediaPlayer mp) {
+                                        // 音乐播放完毕后的操作
+                                        mp.release(); // 释放资源
+                                    }
+                                });
+                            }
+                            Log.d("ERRRR", responseBody);
+                            // 根据实际情况显示图片或处理数据
+                        });
+                    } catch (JSONException e) {
+                        Log.e("JSONError", "JSON parsing error", e);
+                        e.printStackTrace();
+                    }
+                } else {
+                    // 打印出详细的错误信息
+                    Log.d("EERRR", "HTTP Status Code: " + response.code());
+                    Log.d("EERRR", "Response message: " + response.message());
+
+                    if (response.body() != null) {
+                        String errorBody = response.body().string();
+                        Log.d("EERRR", "Error response body: " + errorBody);
+                    }
+                }
+            }
+        });
     }
 
 

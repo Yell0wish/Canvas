@@ -20,9 +20,9 @@ public class DrawingView extends View {
     private Paint drawPaint;
     private Path path;
 
-    private int eraserWidth = 30; // 初始化为默认值，您可以根据需要调整
+    private int eraserWidth = 200; // 初始化为默认值，您可以根据需要调整
 
-    private int selectedStrokeWidth = 5; // 默认宽度
+    private int selectedStrokeWidth = 30; // 默认宽度
 
     private class PaintPath {
         Path path;
